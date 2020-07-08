@@ -9,9 +9,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
+# import matplotlib.dates as mdates
+# import matplotlib.cbook as cbook
 
 
-def data_management(input_file1, input_file2):
+def data_management(input_file1,input_file2 ):
     '''
     This function aims to gather two dataframes into one based on the datetime column, calculate tmrt-Ta
     :param input_file: name of the data file to import
@@ -54,7 +56,7 @@ def match_utci (df_input, df_lookup_table):
         left_on=['Temp_air_2m','tmrt-ta', 'WindSpeed', 'RelativeHumidity'],
         right_on=['Ta','Tr-Ta','va', 'rH']
     )
-
+    
     merged_data['UTCI_ref'] = merged_data['Offset'] + merged_data['Temp_air_2m']
     result = merged_data[['datetime','UTCI', 'UTCI_ref']]
     # Ou bien on rajoute les données d'entrée
@@ -161,22 +163,27 @@ def plot_utci(df_to_plot, list_d_date):
         plt.show()
     """
 
-
-def mean_day_plot(df_to_manage, list_d_date):
+def mean_day_plot (df_to_manage, list_d_date):
+    '''
+    This function allows us to create a mean day from a list of days
+    and to plot the result
+    :param df_to_manage: The dataframe containing the datetime data
+    :param list_d_date: A list of days converted to date type
+    :return: A plot for the mean day of all the days in the the list_d_date
+    '''
     # Create and plot a mean day for the different UTCI values
     df_for_mean_day = df_to_manage[df_to_manage['date'].isin(list_d_date)]
     df_mean_day = df_for_mean_day.groupby(['hour', 'minute'], as_index=False).mean()
-    print
-    # On a besoin de représenter la journée : 1pt / min
-    df_mean_day = df_mean_day.groupby(['hour'], as_index=False).mean()
-    # print(df_mean_day.head(5))
-    # print(df_mean_day.describe())
+    # Create a new column for the full time
+    df_mean_day['full_time'] = df_mean_day['hour'].astype(str)+':'+df_mean_day['minute'].astype(str)
 
-    x = df_mean_day['hour']
+
+    x = df_mean_day['full_time']
     y1 = df_mean_day['UTCI_broede']
     y2 = df_mean_day['UTCI_input']
-    plt.plot(x, y1, "r.", label='Polynomial')
-    plt.plot(x, y2, "+g", label='Broede')
+    plt.plot(x, y1, "-", color = 'red' ,label='Broede')
+    plt.plot(x, y2, "-", color = 'green', label='Polynomia')
+    # plt.xticks(np.arange(min(x), max(x)+1, 1.0))
     plt.ylim(0, 50)
     plt.legend()
     plt.title("Mean day")
@@ -185,6 +192,46 @@ def mean_day_plot(df_to_manage, list_d_date):
 
     plt.show()
 
+'''
+    ######### test ########
+
+    idx = pd.timedelta_range('0', '23', freq = '1H')
+    df = pd.DataFrame(np.cumsum(np.random.randn(len(idx), 2),0),
+                  index = idx)
+
+
+
+    fig, ax = plt.subplots()
+    ax.plot(df.index, x, color='black')
+    ax2 = ax.twinx()
+    ax2.plot(df.index, y1, color='indigo')
+
+    # years = mdates.YearLocator()  # every year
+    # months = mdates.MonthLocator()  # every month
+    # years_fmt = mdates.DateFormatter('%Y')
+
+    hours = mdates.HourLocator(interval=1) # Every hour
+    h_fmt = mdates.DateFormatter('%H:%M:%S')
+    # format the ticks
+    ax.xaxis.set_major_locator(hours)
+    ax.xaxis.set_major_formatter(h_fmt)
+
+    # round to nearest years. => round the nearest hour
+    # hour_min = np.datetime64(df_mean_day['hour'][0], 'Y')
+    # hour_max = np.datetime64(df_mean_day['hour'][-1], 'Y') + np.timedelta64(1, 'Y')
+    # ax.set_xlim(hour_min, hour_max)
+
+    # format the coords message box
+    ax.format_xdata = mdates.DateFormatter('%Y-%m-%d')
+    ax.format_ydata = lambda x: '$%1.2f' % x  # format the price.
+    ax.grid(True)
+
+    # rotates and right aligns the x labels, and moves the bottom of the
+    # axes up to make room for them
+    fig.autofmt_xdate()
+
+    ######### test #########
+'''
 
 if __name__ == "__main__":
     pd.set_option('display.max_columns', None)
@@ -192,7 +239,7 @@ if __name__ == "__main__":
     # Import data
     ## Import the input dataframe
     df_input = data_management('final_data.xlsx', 'UTCI_TMRT.xlsx')
-    df_input = df_input.head(2880)
+
 
     ## Import the Look up table
     df_lookup_table = pd \
@@ -243,15 +290,13 @@ if __name__ == "__main__":
     # print(output.describe())
 
     # Plot the data based on a list of days of reference
-    # days_of_ref = ['2019-08-20', '2019-08-24', '2019-08-28']
-    days_of_ref = ['2019-07-25', '2019-07-26', '2019-08-20']
+    days_of_ref = ['2019-08-24', '2019-08-30']
+
 
     # Converting the list of days to a date
     days_of_ref_date = []
     for d in days_of_ref:
         days_of_ref_date.append(datetime.datetime.strptime(d, "%Y-%m-%d").date())
     # Create the plots
-    plot_utci(output, days_of_ref_date)
-    mean_day_plot(output, days_of_ref_date)
-
-
+    #plot_utci(output, days_of_ref_date)
+    mean_day_plot(output,days_of_ref_date)
