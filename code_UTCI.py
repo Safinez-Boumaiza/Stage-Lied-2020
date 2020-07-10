@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 @author: Safinez Boumaiza
+purpose : Calculate UTCI with based on the Broede look-up-table and plot
+the variation of the different parameters for a list of days of reference
 """
 
 # Import packages
@@ -20,8 +22,10 @@ def data_management(input_file1,input_file2 ):
     :return: One input file (dataframe)
     '''
     # Import Data
-    final_data = pd.read_excel(input_file1, indexcol=0)
-    utci_tmrt = pd.read_excel(input_file2, indexcol=0)
+    final_data = pd.read_excel(input_file1, indexcol=0, nrows=40000)
+    utci_tmrt = pd.read_excel(input_file2, indexcol=0, nrows= 40000)
+    print(len(final_data))
+    print(len(utci_tmrt))
     utci_tmrt.rename(columns={utci_tmrt.columns[0]: "datetime"}, inplace=True)
 
     # Jointure
@@ -72,8 +76,7 @@ def get_closest_value(x, df_table, col):
     :param col: A column of the dataframe df
     :return:The equal or closest value to x
     '''
-    # get the biggest value in the column that is smaller than x
-    # get the smallest value in the column that is bigger than x
+    # get the biggest value in the column that is smaller than x the smallest one that is bigger than x
     df_list = df_table[col].to_list()
 
     near_up = 0
@@ -127,14 +130,12 @@ def plot_utci(df_to_plot, list_d_date):
     # Filter our data based on the list of days of reference
     df_to_plot_filtered = df_to_plot[df_to_plot['date'].isin(list_d_date)]
 
-    # Create a plot per day from the list of days
-    # Scroll through all the days
+    # Scroll through all the days to create a plot per day
     for d in range(len(list_d_date)):
         df_to_plot_filtered_day = df_to_plot_filtered.loc[df_to_plot_filtered['date'] == list_d_date[d]]
         df_to_plot_filtered_day = df_to_plot_filtered_day.groupby(['hour'], as_index=False).mean()
 
         # Plots
-        # Plot 1
         x = df_to_plot_filtered_day['hour']
         y1 = df_to_plot_filtered_day['UTCI_input']
         y2 = df_to_plot_filtered_day['UTCI_broede']
@@ -148,20 +149,6 @@ def plot_utci(df_to_plot, list_d_date):
         plt.ylabel("UTCI values")
 
         plt.show()
-
-        # This part is in case we want to plot the difference only
-    """
-        # Plot 2
-        xx = df_to_plot_filtered_day['hour']
-        yy1 = df_to_plot_filtered_day['Diff_UTCI']
-        plt.plot(xx, yy1, label='Difference')
-        plt.legend()
-        plt.title("Comparaison between two methods of calculation of the UTCI value")
-        plt.xlabel("Day of reference")
-        plt.ylabel("Difference between the two UTCI values")
-
-        plt.show()
-    """
 
 def mean_day_plot (df_to_manage, list_d_date):
     '''
@@ -192,46 +179,8 @@ def mean_day_plot (df_to_manage, list_d_date):
 
     plt.show()
 
-'''
-    ######### test ########
-
-    idx = pd.timedelta_range('0', '23', freq = '1H')
-    df = pd.DataFrame(np.cumsum(np.random.randn(len(idx), 2),0),
-                  index = idx)
 
 
-
-    fig, ax = plt.subplots()
-    ax.plot(df.index, x, color='black')
-    ax2 = ax.twinx()
-    ax2.plot(df.index, y1, color='indigo')
-
-    # years = mdates.YearLocator()  # every year
-    # months = mdates.MonthLocator()  # every month
-    # years_fmt = mdates.DateFormatter('%Y')
-
-    hours = mdates.HourLocator(interval=1) # Every hour
-    h_fmt = mdates.DateFormatter('%H:%M:%S')
-    # format the ticks
-    ax.xaxis.set_major_locator(hours)
-    ax.xaxis.set_major_formatter(h_fmt)
-
-    # round to nearest years. => round the nearest hour
-    # hour_min = np.datetime64(df_mean_day['hour'][0], 'Y')
-    # hour_max = np.datetime64(df_mean_day['hour'][-1], 'Y') + np.timedelta64(1, 'Y')
-    # ax.set_xlim(hour_min, hour_max)
-
-    # format the coords message box
-    ax.format_xdata = mdates.DateFormatter('%Y-%m-%d')
-    ax.format_ydata = lambda x: '$%1.2f' % x  # format the price.
-    ax.grid(True)
-
-    # rotates and right aligns the x labels, and moves the bottom of the
-    # axes up to make room for them
-    fig.autofmt_xdate()
-
-    ######### test #########
-'''
 
 if __name__ == "__main__":
     pd.set_option('display.max_columns', None)
@@ -239,7 +188,6 @@ if __name__ == "__main__":
     # Import data
     ## Import the input dataframe
     df_input = data_management('final_data.xlsx', 'UTCI_TMRT.xlsx')
-
 
     ## Import the Look up table
     df_lookup_table = pd \
@@ -251,7 +199,6 @@ if __name__ == "__main__":
     df_lookup_table.rename(columns={'Offset': 'UTCI_broede'}, inplace=True)
     # Create an output dataframe with the two UTCI values and the datetime value
     output = pd.DataFrame(columns=('datetime', 'UTCI_input', 'UTCI_broede'))
-
     # Look for the UTCI equivalent value to our experimental data
     ## loop through input data
     for x in range(len(df_input.index)):
@@ -270,33 +217,28 @@ if __name__ == "__main__":
         utci = get_utci(df_lookup_table, closest_values)
         output.loc[x] = [df_input.iat[x, 0], df_input.iat[x, 5], utci.round(1)]
     ## Save the results as a csv file
-    """
-     output.to_csv('final_output.csv', index=False)
-    """
+    output.to_csv('final_output.csv', index=False)
 
     # Output data management
-    # Convert the strings to datetime in the our pandas dataframe
+    ## Convert the strings to datetime in the our pandas dataframe
     output['datetime'] = pd.to_datetime(output['datetime'], errors='coerce')
 
-    # Add a column for the difference between the two UTCI values
+    ## Add a column for the difference between the two UTCI values
     output["Diff_UTCI"] = output["UTCI_input"] - output["UTCI_broede"]
 
-    # Add three columns, one for the date, one for the hour and a column for the time
+    ## Add four columns for the date, the hour, the time and the minutes
     output['date'] = output.datetime.dt.date
     output['hour'] = output.datetime.dt.hour
     output['time'] = output.datetime.dt.time
     output['minute'] = output.datetime.dt.minute
-    # print(output.head(5))
-    # print(output.describe())
 
-    # Plot the data based on a list of days of reference
+    ## List of days of reference
     days_of_ref = ['2019-08-24', '2019-08-30']
-
-
-    # Converting the list of days to a date
+    ## Converting the list of days to a date
     days_of_ref_date = []
     for d in days_of_ref:
         days_of_ref_date.append(datetime.datetime.strptime(d, "%Y-%m-%d").date())
-    # Create the plots
-    #plot_utci(output, days_of_ref_date)
+    
+    # Generate the plots
+    plot_utci(output, days_of_ref_date)
     mean_day_plot(output,days_of_ref_date)

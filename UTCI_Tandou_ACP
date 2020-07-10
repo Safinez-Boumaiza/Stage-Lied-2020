@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 @author: Safinez Boumaiza
-Purpose : PCA
+Purpose : This script allows us to generate a correlation matrix and a PCA analysis for the UTCI
+and its different parameters.
 """
 
 ######################### PCA ############################
@@ -178,15 +179,21 @@ if __name__ == "__main__":
 
     ## FIlter the input data based on the list of days of reference
     df_input_filtered = df_input[df_input['date'].isin(days_of_ref_date)]
+    # TODO vaut ieux créer un filtre au début : si dans la list of days on a une journée qui manque\
+    #  Vaut mieux qu'on l'enlève de la liste
 
+############################## Correlation matrix ##############################
 
-    # Create a FOR loop to go through day per day from the list of days of reference for each analysis
+ # Create a FOR loop to go through day per day from the list of days of reference for each analysis
     for i in range(len(days_of_ref_date)):
         df_data_prime = df_input_filtered[df_input_filtered.date == (days_of_ref_date[i])]
 ############################## Correlation matrix ##############################
         corrMatrix = df_data_prime.corr()
         print(corrMatrix)
         sn.heatmap(corrMatrix, annot=True)
+        day = days_of_ref_date[i].strftime("%d/%m/%Y")
+        plt.suptitle("Matrice de corrélation de l'UTCI avec les différents paramètres", fontsize=18, y=1.00)
+        plt.title(day, color="navy", style='oblique')
         plt.show()
         # Get the correlation facotr and it's p-value for UTCI and each parameter
         print(pg.corr(x=df_data_prime['UTCI'], y=df_data_prime['Temp_air_2m']))
@@ -194,7 +201,7 @@ if __name__ == "__main__":
         print(pg.corr(x=df_data_prime['UTCI'], y=df_data_prime['WindSpeed']))
         print(pg.corr(x=df_data_prime['UTCI'], y=df_data_prime['RelativeHumidity']))
 
-############################## Starting from here everything should be repeated#############################
+######################### Starting from here everything should be repeated#############################
         # Number of components to consider : min(p, n-1) (p : var , n: indiv)
         n_comp = 5
         # Select data for PCA analysis
@@ -227,7 +234,7 @@ if __name__ == "__main__":
 
         # Projection of individuals/
         X_projected = pca.transform(X_scaled)
-        day = days_of_ref_date[i].strftime("%d/%m/%Y")
+        # day = days_of_ref_date[i].strftime("%d/%m/%Y")
         display_factorial_planes(X_projected, n_comp, pca, [(0, 1), (2, 3)], day, labels=np.array(names))
 
         plt.show()
