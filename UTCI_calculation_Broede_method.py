@@ -22,8 +22,8 @@ def data_management(input_file1,input_file2 ):
     :return: One input file (dataframe)
     '''
     # Import Data
-    final_data = pd.read_excel(input_file1, indexcol=0, nrows=40000)
-    utci_tmrt = pd.read_excel(input_file2, indexcol=0, nrows= 40000)
+    final_data = pd.read_excel(input_file1, indexcol=0)
+    utci_tmrt = pd.read_excel(input_file2, indexcol=0)
     print(len(final_data))
     print(len(utci_tmrt))
     utci_tmrt.rename(columns={utci_tmrt.columns[0]: "datetime"}, inplace=True)
@@ -144,8 +144,10 @@ def plot_utci(df_to_plot, list_d_date):
         plt.plot(x, y2, label='Broede')
         plt.plot(x, y3, label='Difference')
         plt.legend()
-        plt.title("Comparaison between two methods of calculation of the UTCI value")
-        plt.xlabel("Day of reference")
+        day = list_d_date[d]
+        plt.suptitle("Comparaison between two methods of calculation of the UTCI value")
+        plt.title(day, color="navy", style='oblique')
+        plt.xlabel("hour")
         plt.ylabel("UTCI values")
 
         plt.show()
@@ -218,7 +220,7 @@ if __name__ == "__main__":
         output.loc[x] = [df_input.iat[x, 0], df_input.iat[x, 5], utci.round(1)]
     ## Save the results as a csv file
     output.to_csv('final_output.csv', index=False)
-
+"""
     # Output data management
     ## Convert the strings to datetime in the our pandas dataframe
     output['datetime'] = pd.to_datetime(output['datetime'], errors='coerce')
@@ -242,3 +244,4 @@ if __name__ == "__main__":
     # Generate the plots
     plot_utci(output, days_of_ref_date)
     mean_day_plot(output,days_of_ref_date)
+"""

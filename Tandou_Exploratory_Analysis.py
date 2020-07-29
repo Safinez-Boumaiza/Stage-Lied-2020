@@ -62,18 +62,14 @@ if __name__ == "__main__":
 
     # Selection of days of reference
     ## List of days of reference
-    days_of_ref = ['2019-08-24', '2019-08-30']
+    days_of_ref = ['2019-06-24', '2019-06-25']
     ## Converting the list of days to a date
     days_of_ref_date = []
     for d in days_of_ref:
         days_of_ref_date.append(datetime.datetime.strptime(d, "%Y-%m-%d").date())
-    print(len(days_of_ref_date))
-    print(days_of_ref_date)
 
     ## Filtering the data based on the list of days of reference
     df_to_analyse_filtered = df_to_analyse[df_to_analyse['date'].isin(days_of_ref_date)]
-    print(len(df_to_analyse_filtered))
-    print(df_to_analyse_filtered['date'].unique())
 
     ## Plot the distribution of each parameter for each day of reference
     for d in range(len(days_of_ref_date)):

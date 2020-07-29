@@ -180,7 +180,8 @@ if __name__ == "__main__":
     ## FIlter the input data based on the list of days of reference
     df_input_filtered = df_input[df_input['date'].isin(days_of_ref_date)]
     # TODO vaut ieux créer un filtre au début : si dans la list of days on a une journée qui manque\
-    #  Vaut mieux qu'on l'enlève de la liste
+    #  Vaut mieux qu'on l'enlève de la liste \
+    #  Rajouter une boucle IF dans la Pour ? (maybe)
 
 ############################## Correlation matrix ##############################
 
@@ -234,7 +235,7 @@ if __name__ == "__main__":
 
         # Projection of individuals/
         X_projected = pca.transform(X_scaled)
-        # day = days_of_ref_date[i].strftime("%d/%m/%Y")
+        day = days_of_ref_date[i].strftime("%d/%m/%Y")
         display_factorial_planes(X_projected, n_comp, pca, [(0, 1), (2, 3)], day, labels=np.array(names))
 
         plt.show()
